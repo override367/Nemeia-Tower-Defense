@@ -1,0 +1,27 @@
+html,body{height:100%;margin:0;background:#0b1520;color:#e9eef4;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:12px}
+#hud{display:flex;justify-content:space-between;align-items:center;background:#0e1b2a;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:10px;color:#cfe7ff}
+#hud .logo{font-weight:800}
+#hud .sep{opacity:.35;margin:0 8px}
+#stage{position:relative;margin-top:12px}
+canvas{display:block;width:100%;height:auto;border-radius:12px;background:#17314d;box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+
+.overlay{position:absolute;inset:0;display:grid;place-items:center;z-index:99;pointer-events:none}
+.overlay .panel{pointer-events:auto;background:rgba(10,14,20,.9);border:1px solid rgba(255,255,255,.1);padding:16px 22px;border-radius:10px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.diff-choices{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.diff{background:#0e1b2a;border:1px solid rgba(255,255,255,.15);color:#cfe7ff;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer}
+.diff.primary{background:#16406b}
+
+.toast{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(255,255,255,.88);color:#0b1520;padding:6px 10px;border-radius:999px;font-size:12px;box-shadow:0 8px 16px rgba(0,0,0,.35)}
+
+.buildbar{position:absolute;left:50%;top:10px;transform:translateX(-50%);display:flex;gap:8px;z-index:90;background:#0e1b2a;border:1px solid rgba(255,255,255,.12);padding:8px 10px;border-radius:10px}
+.buildbar button{background:#0e1b2a;border:1px solid rgba(255,255,255,.15);color:#cfe7ff;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:600}
+.buildbar .ghost{background:transparent;border-color:rgba(255,255,255,.25);color:#b8c9e0}
+.buildbar button:hover{background:#0f2236}
+.sepv{width:1px;height:auto;align-self:stretch;background:rgba(255,255,255,.1);margin:0 4px}
+
+.wavebanner{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#0b1520;padding:8px 12px;border-radius:10px;font-weight:800;box-shadow:0 8px 16px rgba(0,0,0,.35);z-index:91}
+
+/* Updated cursors */
+body[data-mode="upgrade"] canvas{cursor:url("images/upgrade.png") 12 12, pointer;box-shadow:0 0 0 3px rgba(120,180,255,.6) inset}
+body[data-mode="refund"]  canvas{cursor:url("images/destroy.png") 12 12, pointer;box-shadow:0 0 0 3px rgba(255,120,120,.6) inset}

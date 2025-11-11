@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nemiea TD — Alluvian Beach Defense</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header id="hud">
+      <div class="left">
+        <span class="logo">Nemiea — Alluvian Beach Defense</span>
+        <span class="sep">•</span>
+        <span class="hint">
+          SPACE/Enter start • 1–4 build • 5 Guiding • 6 Upgrade • 7 Refund • Hold mouse to fire • Click enemy to <b>point‑target</b> • Right‑click cancels • R restart
+        </span>
+      </div>
+      <div class="right">
+        <span>Wave: <b id="wave">1</b></span>
+        <span class="sep">|</span>
+        <span>Omens: <b id="omens">3</b></span>
+      </div>
+    </header>
+
+    <div id="stage">
+      <!-- Top action bar -->
+      <div id="buildbar" class="buildbar" hidden>
+        <button data-t="healing">Priestess (3) [1]</button>
+        <button data-t="blight">Mage (5) [2]</button>
+        <button data-t="agathys">Knight (6) [3]</button>
+        <button data-t="moonbeam">Druid (7) [4]</button>
+        <button data-t="guiding">Guiding Bolt (5) [5]</button>
+        <span class="sepv"></span>
+        <button id="modeUpgrade">Upgrade (6)</button>
+        <button id="modeRefund">Refund (7)</button>
+        <button data-t="close" class="ghost">Close</button>
+      </div>
+
+      <canvas id="game" width="960" height="540" aria-label="Nemiea PVZ Field"></canvas>
+
+      <!-- Start/End overlay with Difficulty -->
+      <div id="overlay" class="overlay">
+        <div class="panel">
+          <h1 id="title">Choose your challenge</h1>
+          <p id="subtitle">
+            5×5 grid on the sand. Each lane allows <b>one</b> slip, then it’s fatal.<br>
+            1 Priestess (3) • 2 Mage (5) • 3 Knight (6) • 4 Druid (7) • 5 Guiding • 6 Upgrade • 7 Refund<br>
+            Hold mouse to fire. Click enemies to <b>point‑target</b> your shot.
+          </p>
+          <div class="diff-choices">
+            <button data-diff="easy" class="diff">Easy (−30%)</button>
+            <button data-diff="normal" class="diff primary">Normal</button>
+            <button data-diff="hard" class="diff">Hard (+50%)</button>
+          </div>
+          <p style="opacity:.8;margin-top:10px">Press <b>SPACE</b> or <b>Enter</b> to start on Normal.</p>
+        </div>
+      </div>
+
+      <!-- Toasts / Wave banner -->
+      <div id="toast" class="toast" hidden></div>
+      <div id="wavebanner" class="wavebanner" hidden></div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
