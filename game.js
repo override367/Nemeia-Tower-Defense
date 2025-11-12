@@ -452,7 +452,10 @@
     const tx = target.x + target.w/2, ty = target.y + target.h/2;
     const sx = t.x - 220, sy = -120; const travel=0.8;
     const vx = (tx - sx) / travel; const vy = (ty - sy) / travel;
-    projectiles.push({ kind:'meteor', x:sx, y:sy, vx, vy, ttl:travel, t:0, r:18, dmgP:4, dmgAOE:2, cx:tx, cy:ty });
+    const rows=[];
+    if(target.row!=null) rows.push(target.row);
+    if(target.rowB!=null) rows.push(target.rowB);
+    projectiles.push({ kind:'meteor', x:sx, y:sy, vx, vy, ttl:travel, t:0, r:18, dmgP:4, dmgAOE:2, cx:tx, cy:ty, targetId:target.id, targetRows:rows });
     playOne(SFX.explosion); // whoosh not provided; reuse
   }
   function castFireball(t){
@@ -613,30 +616,48 @@
         const v = p.speed || 520; p.vx = dx/d * v; p.vy = dy/d * v;
       }
       p.x += (p.vx||0)*dt; p.y += (p.vy||0)*dt;
-      if(p.kind==='meteor'){ p.t += dt; if(p.t >= p.ttl){ // impact
-          // 4x primary, 2x up/down and left/right
-          splashSameRow(nearestRowFromY(p.cy), p.cx, 28, p.dmgP);
-          splashRows([nearestRowFromY(p.cy)-1, nearestRowFromY(p.cy)+1].filter(r=>r>=0 && r<ROWS), p.cx, 36, p.dmgAOE);
-          splashSameRow(nearestRowFromY(p.cy), p.cx-100, 26, p.dmgAOE);
-          splashSameRow(nearestRowFromY(p.cy), p.cx+100, 26, p.dmgAOE);
+      if(p.kind==='meteor'){
+        if(p.targetId){
+          const follow = enemies.find(e=>e && e.id===p.targetId && e.hp>0);
+          if(follow){
+            p.cx = follow.x + follow.w/2;
+            p.cy = follow.y + follow.h/2;
+            const rows=[];
+            if(follow.row!=null) rows.push(follow.row);
+            if(follow.rowB!=null) rows.push(follow.rowB);
+            if(rows.length) p.targetRows = rows;
+          }
+        }
+        p.t += dt;
+        if(p.t >= p.ttl){ // impact
+          const primaryRow = (p.targetRows && p.targetRows.length) ? p.targetRows[0] : nearestRowFromY(p.cy);
+          const adjCandidates = (p.targetRows && p.targetRows.length>1) ? p.targetRows.slice(1) : [primaryRow-1, primaryRow+1];
+          const adjRows = adjCandidates.filter(r=>r>=0 && r<ROWS && r!==primaryRow);
+          splashSameRow(primaryRow, p.cx, 28, p.dmgP);
+          if(adjRows.length) splashRows(adjRows, p.cx, 36, p.dmgAOE);
+          splashSameRow(primaryRow, p.cx-100, 26, p.dmgAOE);
+          splashSameRow(primaryRow, p.cx+100, 26, p.dmgAOE);
           spawnExplosion(p.cx, p.cy, 'meteor'); p.dead=true; continue;
-        } }
-      for(const e of enemies){
-        if(!e || e.hp<=0) continue;
-        if(p.targeted && e.id!==p.targetId) continue;
-        if(Math.abs((e.y+e.h/2)-p.y) > CELL_H*0.5) continue;
-        if(Math.abs((e.x+e.w/2)-p.x) <= Math.max(p.r||6, e.w*0.5)){
-          if(p.kind==='guiding'){
-            const deal=Math.min(p.pool, e.hp); e.hp-=deal; onEnemyDamaged(e,'player'); p.pool-=deal; e.lastHitBy='player';
-            spawnExplosion(p.x, p.y,'guiding'); if(p.pool<=0){ p.dead=true; break; }
-          } else if(p.kind==='fireball'){
-            e.hp -= p.dmgP; e.lastHitBy='spell'; onEnemyDamaged(e,'spell');
-            splashSameRow(p.row, e.x+e.w/2, 80, p.dmgAOE);
-            spawnExplosion(p.x, p.y,'fireball'); playOne(SFX.fireboom);
-            p.dead=true; break;
-          } else {
-            e.hp -= (p.dmg||1); e.lastHitBy = p.src==='player' ? 'player' : 'tower'; onEnemyDamaged(e, e.lastHitBy);
-            spawnExplosion(p.x, p.y,'draw'); p.dead=true; break;
+        }
+      }
+      if(p.kind!=='meteor'){
+        for(const e of enemies){
+          if(!e || e.hp<=0) continue;
+          if(p.targeted && e.id!==p.targetId) continue;
+          if(Math.abs((e.y+e.h/2)-p.y) > CELL_H*0.5) continue;
+          if(Math.abs((e.x+e.w/2)-p.x) <= Math.max(p.r||6, e.w*0.5)){
+            if(p.kind==='guiding'){
+              const deal=Math.min(p.pool, e.hp); e.hp-=deal; onEnemyDamaged(e,'player'); p.pool-=deal; e.lastHitBy='player';
+              spawnExplosion(p.x, p.y,'guiding'); if(p.pool<=0){ p.dead=true; break; }
+            } else if(p.kind==='fireball'){
+              e.hp -= p.dmgP; e.lastHitBy='spell'; onEnemyDamaged(e,'spell');
+              splashSameRow(p.row, e.x+e.w/2, 80, p.dmgAOE);
+              spawnExplosion(p.x, p.y,'fireball'); playOne(SFX.fireboom);
+              p.dead=true; break;
+            } else {
+              e.hp -= (p.dmg||1); e.lastHitBy = p.src==='player' ? 'player' : 'tower'; onEnemyDamaged(e, e.lastHitBy);
+              spawnExplosion(p.x, p.y, p.src==='player' ? 'drawHit' : 'draw'); p.dead=true; break;
+            }
           }
         }
       }
@@ -722,7 +743,7 @@
   }
   function spawnExplosion(x,y,kind='draw'){
     const life = 0.55;
-    const map = {guiding:'gboom', draw:'dboom', fireball:'fboom', lightning:'lboom', meteor:'mboom'};
+    const map = {guiding:'gboom', draw:'dboom', fireball:'fboom', lightning:'lboom', meteor:'mboom', drawHit:'dboomhit'};
     effects.push({type:map[kind]||'dboom', x, y, t:0, life});
   }
   function killTower(t){
@@ -883,6 +904,7 @@
         const mid = (fx.type==='fboom' || fx.type==='lboom');
         const s = (big? 80 : mid? 56 : 40) * (0.5 + 0.5*u);
         let img = SPR.explosionPng || SPR.explosionJpg;
+        if(fx.type==='dboomhit' && SPR.drawBoom) img = SPR.drawBoom;
         if(fx.type==='fboom' && SPR.fireballBoom) img = SPR.fireballBoom;
         if(fx.type==='lboom' && SPR.lightBoom) img = SPR.lightBoom;
         drawSprite(img, fx.x-s/2, fx.y-s/2, s, s, '#ffb347');
