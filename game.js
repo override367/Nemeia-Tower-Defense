@@ -140,7 +140,7 @@
   loadImageMulti('bossAtk', IMG('Boss_Attack.png'));
 
   // ====== Audio (grouped master/FX/music with pause menu) ======
-  let VOL={ master:1.0, fx:1.0, music:1.0 };
+  let VOL={ master:0.5, fx:0.5, music:0.5 };
   function makeAudio(url,{loop=false,vol=0.6}={}){ try{ const a=new Audio(url); a.loop=loop; a.volume=vol; a.preload='auto'; return a; }catch{ return null; } }
   function loadSfx(names,{loop=false,vol=0.7}={}){
     const results=[]; const tryNames = Array.isArray(names)? names : [names];
@@ -196,9 +196,9 @@
     }
   }
   function applyVolumes(){ const list=[]; collectAudio(list,SFX); for(const m of MUSIC) if(m) list.push(m); for(const a of list) adjustVol(a); }
-  let volSteps={master:10,fx:10,music:10};
+  let volSteps={master:5,fx:5,music:5};
   function setVol(which,val){ volSteps[which]=Math.max(0,Math.min(10,val|0)); VOL.master=volSteps.master/10; VOL.fx=volSteps.fx/10; VOL.music=volSteps.music/10; if($valMaster) $valMaster.textContent=volSteps.master; if($valFx) $valFx.textContent=volSteps.fx; if($valMusic) $valMusic.textContent=volSteps.music; applyVolumes(); }
-  setVol('master',10); setVol('fx',10); setVol('music',10);
+  setVol('master',5); setVol('fx',5); setVol('music',5);
   document.querySelectorAll('.volbtn').forEach(btn=>{ btn.addEventListener('click',()=>{ const k=btn.getAttribute('data-vol'); const d=parseInt(btn.getAttribute('data-delta'),10)||0; setVol(k, (volSteps[k]||0)+d); }); });
 
   // ====== State ======
@@ -448,15 +448,14 @@
     for(const e of enemies){ if(!e||e.hp<=0) continue; if(rows.includes(e.row) || (e.rowB!=null && rows.includes(e.rowB))){ const ex=e.x+e.w/2; if(Math.abs(ex-cx)<=range){ e.hp-=dmg; e.lastHitBy='spell'; onEnemyDamaged(e,'spell'); } } }
   }
   function castMeteor(t, target){
-    // Spawn meteor projectile from off-screen top-left toward target's current center; persist even if target dies
-    const tx = target.x + target.w/2, ty = target.y + target.h/2;
-    const sx = t.x - 220, sy = -120; const travel=0.8;
-    const vx = (tx - sx) / travel; const vy = (ty - sy) / travel;
     const rows=[];
     if(target.row!=null) rows.push(target.row);
     if(target.rowB!=null) rows.push(target.rowB);
-    projectiles.push({ kind:'meteor', x:sx, y:sy, vx, vy, ttl:travel, t:0, r:18, dmgP:4, dmgAOE:2, cx:tx, cy:ty, targetId:target.id, targetRows:rows });
-    playOne(SFX.explosion); // whoosh not provided; reuse
+    const primaryRow = rows.length ? rows[0] : t.row;
+    const adjCandidates = rows.length>1 ? rows.slice(1) : [primaryRow-1, primaryRow+1];
+    const adjRows = adjCandidates.filter(r=>r>=0 && r<ROWS && r!==primaryRow);
+    projectiles.push({ kind:'meteor', x:t.x, y:t.y-8, vx:+360, vy:0, r:20, dmgP:4, dmgAOE:2, row:t.row, primaryRow, adjRows, targetRows:rows });
+    playOne(SFX.fireball);
   }
   function castFireball(t){
     // Faster than missile? keep same speed, different hit behavior
@@ -617,30 +616,34 @@
       }
       p.x += (p.vx||0)*dt; p.y += (p.vy||0)*dt;
       if(p.kind==='meteor'){
-        if(p.targetId){
-          const follow = enemies.find(e=>e && e.id===p.targetId && e.hp>0);
-          if(follow){
-            p.cx = follow.x + follow.w/2;
-            p.cy = follow.y + follow.h/2;
+        let impacted=false;
+        for(const e of enemies){
+          if(!e || e.hp<=0) continue;
+          if(Math.abs((e.y+e.h/2)-p.y) > CELL_H*0.5) continue;
+          if(Math.abs((e.x+e.w/2)-p.x) <= Math.max(p.r||6, e.w*0.5)){
+            const centerX = e.x + e.w/2;
+            const centerY = e.y + e.h/2;
             const rows=[];
-            if(follow.row!=null) rows.push(follow.row);
-            if(follow.rowB!=null) rows.push(follow.rowB);
-            if(rows.length) p.targetRows = rows;
+            if(p.targetRows && p.targetRows.length){ rows.push(...p.targetRows); }
+            else {
+              if(e.row!=null) rows.push(e.row);
+              if(e.rowB!=null) rows.push(e.rowB);
+            }
+            let primaryRow = (typeof p.primaryRow==='number') ? p.primaryRow : (rows.length ? rows[0] : nearestRowFromY(centerY));
+            const adjCandidates = (p.adjRows && p.adjRows.length) ? p.adjRows : (rows.length>1 ? rows.slice(1) : [primaryRow-1, primaryRow+1]);
+            const adjRows = adjCandidates.filter(r=>r>=0 && r<ROWS && r!==primaryRow);
+            splashSameRow(primaryRow, centerX, 28, p.dmgP);
+            if(adjRows.length) splashRows(adjRows, centerX, 36, p.dmgAOE);
+            splashSameRow(primaryRow, centerX-100, 26, p.dmgAOE);
+            splashSameRow(primaryRow, centerX+100, 26, p.dmgAOE);
+            spawnExplosion(centerX, centerY, 'meteor', 2);
+            playOne(SFX.fireboom);
+            playOne(SFX.thunder);
+            p.dead=true; impacted=true; break;
           }
         }
-        p.t += dt;
-        if(p.t >= p.ttl){ // impact
-          const primaryRow = (p.targetRows && p.targetRows.length) ? p.targetRows[0] : nearestRowFromY(p.cy);
-          const adjCandidates = (p.targetRows && p.targetRows.length>1) ? p.targetRows.slice(1) : [primaryRow-1, primaryRow+1];
-          const adjRows = adjCandidates.filter(r=>r>=0 && r<ROWS && r!==primaryRow);
-          splashSameRow(primaryRow, p.cx, 28, p.dmgP);
-          if(adjRows.length) splashRows(adjRows, p.cx, 36, p.dmgAOE);
-          splashSameRow(primaryRow, p.cx-100, 26, p.dmgAOE);
-          splashSameRow(primaryRow, p.cx+100, 26, p.dmgAOE);
-          spawnExplosion(p.cx, p.cy, 'meteor'); p.dead=true; continue;
-        }
-      }
-      if(p.kind!=='meteor'){
+        if(impacted) continue;
+      } else {
         for(const e of enemies){
           if(!e || e.hp<=0) continue;
           if(p.targeted && e.id!==p.targetId) continue;
@@ -741,10 +744,10 @@
       else { ctx.save(); ctx.translate(X, cy); ctx.scale(-1,1); ctx.drawImage(img,-w/2,-targetH/2,w,targetH); ctx.restore(); }
     } else { ctx.fillStyle=fb; ctx.fillRect(X-targetH/2,cy-targetH/2,targetH,targetH); }
   }
-  function spawnExplosion(x,y,kind='draw'){
+  function spawnExplosion(x,y,kind='draw',scale=1){
     const life = 0.55;
     const map = {guiding:'gboom', draw:'dboom', fireball:'fboom', lightning:'lboom', meteor:'mboom', drawHit:'dboomhit'};
-    effects.push({type:map[kind]||'dboom', x, y, t:0, life});
+    effects.push({type:map[kind]||'dboom', x, y, t:0, life, scale});
   }
   function killTower(t){
     t.dead=true; t.possessed=false; t.possessedBy=null; t.hp=0;
@@ -883,7 +886,7 @@
       let img=SPR.draw, H=24;
       if(p.kind==='guiding'){ img=SPR.guiding||SPR.draw; H=26; }
       else if(p.kind==='fireball'){ img=SPR.fireball||SPR.draw; H=24; }
-      else if(p.kind==='meteor'){ img=SPR.meteor||SPR.draw; H=38; }
+      else if(p.kind==='meteor'){ img=(SPR.fireball||SPR.meteor||SPR.draw); H=48; }
       else if(p.src==='mage'){ img=SPR.magicmissile||SPR.draw; H=20; }
       drawCenterByHeight(img, p.x, p.y, H, '#9bd3ff');
     }
@@ -902,7 +905,8 @@
       else {
         const big = (fx.type==='gboom' || fx.type==='mboom');
         const mid = (fx.type==='fboom' || fx.type==='lboom');
-        const s = (big? 80 : mid? 56 : 40) * (0.5 + 0.5*u);
+        const scale = fx.scale || 1;
+        const s = (big? 80 : mid? 56 : 40) * (0.5 + 0.5*u) * scale;
         let img = SPR.explosionPng || SPR.explosionJpg;
         if(fx.type==='dboomhit' && SPR.drawBoom) img = SPR.drawBoom;
         if(fx.type==='fboom' && SPR.fireballBoom) img = SPR.fireballBoom;
