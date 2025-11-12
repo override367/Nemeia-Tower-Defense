@@ -2,65 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Nemiea TD — Alluvian Beach Defense</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <header id="hud">
-      <div class="left">
-        <span class="logo">Nemiea — Alluvian Beach Defense</span>
-        <span class="sep">•</span>
-        <span class="hint">
-          SPACE/Enter start • 1–4 build • 5 Guiding • 6 Upgrade • 7 Refund • Hold mouse to fire • Click enemy to <b>point‑target</b> • Right‑click cancels • R restart
-        </span>
+  <div id="stage">
+    <!-- Build bar (stacked tiles) -->
+    <div id="buildbar" class="buildbar" hidden>
+      <div class="tile" data-t="healing" title="Priestess (3) [1]">
+        <img class="badge" src="images/BadgePriestess.png" alt="Priestess" />
+        <img class="key"   src="images/1key.png" alt="Key 1" />
+        <img class="cost"  src="images/3card.png" alt="3 Omens" />
       </div>
-      <div class="right">
-        <span>Wave: <b id="wave">1</b></span>
-        <span class="sep">|</span>
-        <span>Omens: <b id="omens">3</b></span>
+      <div class="tile" data-t="blight" title="Mage (5) [2]">
+        <img class="badge" src="images/BadgeMage.png" alt="Mage" />
+        <img class="key"   src="images/2key.png" alt="Key 2" />
+        <img class="cost"  src="images/5card.png" alt="5 Omens" />
       </div>
-    </header>
-
-    <div id="stage">
-      <!-- Top action bar -->
-      <div id="buildbar" class="buildbar" hidden>
-        <button data-t="healing">Priestess (3) [1]</button>
-        <button data-t="blight">Mage (5) [2]</button>
-        <button data-t="agathys">Knight (6) [3]</button>
-        <button data-t="moonbeam">Druid (7) [4]</button>
-        <button data-t="guiding">Guiding Bolt (5) [5]</button>
-        <span class="sepv"></span>
-        <button id="modeUpgrade">Upgrade (6)</button>
-        <button id="modeRefund">Refund (7)</button>
-        <button data-t="close" class="ghost">Close</button>
+      <div class="tile" data-t="agathys" title="Knight (6) [3]">
+        <img class="badge" src="images/BadgeKnight.png" alt="Knight" />
+        <img class="key"   src="images/3key.png" alt="Key 3" />
+        <img class="cost"  src="images/6card.png" alt="6 Omens" />
       </div>
-
-      <canvas id="game" width="960" height="540" aria-label="Nemiea PVZ Field"></canvas>
-
-      <!-- Start/End overlay with Difficulty -->
-      <div id="overlay" class="overlay">
-        <div class="panel">
-          <h1 id="title">Choose your challenge</h1>
-          <p id="subtitle">
-            5×5 grid on the sand. Each lane allows <b>one</b> slip, then it’s fatal.<br>
-            1 Priestess (3) • 2 Mage (5) • 3 Knight (6) • 4 Druid (7) • 5 Guiding • 6 Upgrade • 7 Refund<br>
-            Hold mouse to fire. Click enemies to <b>point‑target</b> your shot.
-          </p>
-          <div class="diff-choices">
-            <button data-diff="easy" class="diff">Easy (−30%)</button>
-            <button data-diff="normal" class="diff primary">Normal</button>
-            <button data-diff="hard" class="diff">Hard (+50%)</button>
-          </div>
-          <p style="opacity:.8;margin-top:10px">Press <b>SPACE</b> or <b>Enter</b> to start on Normal.</p>
-        </div>
+      <div class="tile" data-t="moonbeam" title="Druid (7) [4]">
+        <img class="badge" src="images/BadgeDruid.png" alt="Druid" />
+        <img class="key"   src="images/4key.png" alt="Key 4" />
+        <img class="cost"  src="images/7card.png" alt="7 Omens" />
       </div>
-
-      <!-- Toasts / Wave banner -->
-      <div id="toast" class="toast" hidden></div>
-      <div id="wavebanner" class="wavebanner" hidden></div>
+      <div class="tile" data-t="guiding" title="Guiding Bolt (5) [5]">
+        <img class="badge" src="images/BadgeGuidingBolt.png" alt="Guiding" />
+        <img class="key"   src="images/5key.png" alt="Key 5" />
+        <img class="cost"  src="images/5card.png" alt="5 Omens" />
+      </div>
+      <span class="sepv"></span>
+      <div class="tile" id="tileUpgrade" title="Upgrade (6)">
+        <img class="badge" src="images/BadgeUpgrade.png" alt="Upgrade" />
+        <img class="key"   src="images/6key.png" alt="Key 6" />
+        <img class="cost"  src="images/6card.png" alt="Upgrade" />
+      </div>
+      <div class="tile" id="tileRefund" title="Refund (7)">
+        <img class="badge" src="images/BadgeDestroy.png" alt="Destroy" />
+        <img class="key"   src="images/7key.png" alt="Key 7" />
+        <img class="cost"  src="images/7card.png" alt="Refund" />
+      </div>
     </div>
+
+    <canvas id="game" width="960" height="540" aria-label="Nemiea PVZ Field"></canvas>
+
+    <!-- Start/End overlay with Difficulty (instructions live here) -->
+    <div id="overlay" class="overlay">
+      <div class="panel">
+        <h1 id="title">Press SPACE or click to start</h1>
+        <p id="subtitle">
+          Choose your challenge:<br>
+          <button data-diff="easy" class="diff">Easy (−30%)</button>
+          <button data-diff="normal" class="diff primary">Normal</button>
+          <button data-diff="hard" class="diff">Hard (+50%)</button>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div id="pauseOverlay" class="overlay" style="display:none">
+      <div class="panel panel-blue">
+        <h1 style="margin:6px 0 10px 0">Paused</h1>
+        <div class="vol-rows">
+          <div class="vol-row">
+            <span class="vol-label">Master</span>
+            <div class="vol-ctrl">
+              <button class="volbtn" data-vol="master" data-delta="-1" aria-label="Master volume down">−</button>
+              <span id="valMaster" class="vol-val">10</span>
+              <button class="volbtn" data-vol="master" data-delta="1" aria-label="Master volume up">+</button>
+            </div>
+          </div>
+          <div class="vol-row">
+            <span class="vol-label">FX</span>
+            <div class="vol-ctrl">
+              <button class="volbtn" data-vol="fx" data-delta="-1" aria-label="FX volume down">−</button>
+              <span id="valFx" class="vol-val">10</span>
+              <button class="volbtn" data-vol="fx" data-delta="1" aria-label="FX volume up">+</button>
+            </div>
+          </div>
+          <div class="vol-row">
+            <span class="vol-label">Music</span>
+            <div class="vol-ctrl">
+              <button class="volbtn" data-vol="music" data-delta="-1" aria-label="Music volume down">−</button>
+              <span id="valMusic" class="vol-val">10</span>
+              <button class="volbtn" data-vol="music" data-delta="1" aria-label="Music volume up">+</button>
+            </div>
+          </div>
+        </div>
+        <p class="pause-hint">Press <b>P</b> to resume</p>
+      </div>
+    </div>
+
+    <!-- Toasts / Wave banner -->
+    <div id="toast" class="toast" hidden></div>
+    <div id="wavebanner" class="wavebanner" hidden></div>
   </div>
 
   <script src="game.js"></script>
