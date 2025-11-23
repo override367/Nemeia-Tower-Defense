@@ -69,17 +69,17 @@ canvas{position:absolute;inset:0;width:100vw;height:100vh;display:block;backgrou
   /* This tells the image to stretch across both columns */
   grid-column: span 2; 
   /* Now we can make it HUGE compared to before */
-  width: 64px; 
+  width: 128px; 
 }
 
 /* The Keypress (Bottom Left) */
 .tile .key {
-  width: 30px; /* Slightly smaller to fit in the column */
+  width: 60px; /* Slightly smaller to fit in the column */
 }
 
 /* The Cost (Bottom Right) */
 .tile .cost {
-  width: 30px; 
+  width: 60px; 
 }
 
 /* Cursors for modes */
