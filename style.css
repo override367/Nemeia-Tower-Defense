@@ -11,14 +11,55 @@ canvas{position:absolute;inset:0;width:100vw;height:100vh;display:block;backgrou
 .wavebanner{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:rgba(255,255,255,.95);color:#0b1520;padding:6px 10px;border-radius:10px;font-weight:800;box-shadow:0 8px 16px rgba(0,0,0,.35);z-index:95}
 
 /* Buildbar: tiny translucent strip hugging the top */
-.buildbar{position:absolute;left:50%;top:0;transform:translateX(-50%);display:flex;gap:4px;z-index:90;background:rgba(14,27,42,.3);border:1px solid rgba(255,255,255,.18);padding:3px 5px;border-radius:10px}
-.sepv{width:1px;height:auto;align-self:stretch;background:rgba(255,255,255,.2);margin:0 3px}
-.tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(14,27,42,.25);cursor:pointer;min-width:40px}
-.tile:hover{background:rgba(17,38,63,.35)}
-.tile img{display:block;height:auto;object-fit:contain;image-rendering:auto}
-.tile .badge{width:36px}
-.tile .key{width:33px}
-.tile .cost{width:34px}
+.tile {
+  display: grid;
+  /* Create two equal columns */
+  grid-template-columns: 1fr 1fr; 
+  /* Center items nicely */
+  justify-items: center;
+  align-items: center;
+  gap: 2px; /* Space between elements */
+  
+  /* Make the tile wider so the bottom two icons fit side-by-side */
+  min-width: 80px; 
+  
+  /* Keep your existing visuals */
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(14,27,42,.25);
+  cursor: pointer;
+}
+
+.tile:hover {
+  background: rgba(17,38,63,.35);
+}
+
+.tile img {
+  display: block;
+  height: auto;
+  object-fit: contain;
+}
+
+/* --- THE IMAGES --- */
+
+/* The Title Card (Top) */
+.tile .badge {
+  /* This tells the image to stretch across both columns */
+  grid-column: span 2; 
+  /* Now we can make it HUGE compared to before */
+  width: 64px; 
+}
+
+/* The Keypress (Bottom Left) */
+.tile .key {
+  width: 30px; /* Slightly smaller to fit in the column */
+}
+
+/* The Cost (Bottom Right) */
+.tile .cost {
+  width: 30px; 
+}
 
 /* Cursors for modes */
 body[data-mode="upgrade"] canvas{cursor:url("images/upgrade.png") 12 12, pointer}
