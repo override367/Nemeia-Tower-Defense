@@ -9,7 +9,28 @@ canvas{position:absolute;inset:0;width:100vw;height:100vh;display:block;backgrou
 
 .toast{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(255,255,255,.9);color:#0b1520;padding:6px 10px;border-radius:999px;font-size:12px;box-shadow:0 8px 16px rgba(0,0,0,.35);z-index:95}
 .wavebanner{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:rgba(255,255,255,.95);color:#0b1520;padding:6px 10px;border-radius:10px;font-weight:800;box-shadow:0 8px 16px rgba(0,0,0,.35);z-index:95}
+/* Buildbar: tiny translucent strip hugging the top */
+.buildbar {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 90;
+  background: rgba(14,27,42,.3);
+  border: 1px solid rgba(255,255,255,.18);
+  padding: 3px 5px;
+  border-radius: 10px;
+}
 
+.sepv {
+  width: 1px;
+  height: auto;
+  align-self: stretch;
+  background: rgba(255,255,255,.2);
+  margin: 0 3px;
+}
 /* Buildbar: tiny translucent strip hugging the top */
 .tile {
   display: grid;
