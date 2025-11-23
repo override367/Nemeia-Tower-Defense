@@ -416,7 +416,7 @@
       const k = spawnPlan.queue[spawnPlan.idx++]; spawnEnemy(k); spawnTimer=spawnPlan.rate;
     }
     if(spawnPlan.idx>=spawnPlan.queue.length && enemies.every(e=>!e || e.hp<=0)){
-      if(wave<10){ nextWave=wave+1; interWave=4.0; spawnPlan=null; } else { victory=true; showOverlay('You defended the beach!','Press R to restart'); }
+      if(wave<10){ nextWave=wave+1; interWave=11.0; spawnPlan=null; } else { victory=true; showOverlay('You defended the beach!','Press R to restart'); }
     }
   }
 
